@@ -41,6 +41,7 @@ class ProcPool(utils.EventEmitter[EventTypes]):
         memory_limit_mb: float,
         http_proxy: str | None,
         loop: asyncio.AbstractEventLoop,
+        user_arguments: Any | None = None,
     ) -> None:
         super().__init__()
         self._job_executor_type = job_executor_type
@@ -57,6 +58,8 @@ class ProcPool(utils.EventEmitter[EventTypes]):
         self._http_proxy = http_proxy
         self._target_idle_processes = num_idle_processes
 
+        self._user_args = user_arguments
+
         self._init_sem = asyncio.Semaphore(MAX_CONCURRENT_INITIALIZATIONS)
         self._warmed_proc_queue = asyncio.Queue[JobExecutor]()
         self._executors: list[JobExecutor] = []
@@ -71,6 +74,10 @@ class ProcPool(utils.EventEmitter[EventTypes]):
     @property
     def processes(self) -> list[JobExecutor]:
         return self._executors
+
+    @property
+    def user_arguments(self) -> Any | None:
+        return self._user_args
 
     def get_by_job_id(self, job_id: str) -> JobExecutor | None:
         return next(
@@ -154,6 +161,7 @@ class ProcPool(utils.EventEmitter[EventTypes]):
         else:
             raise ValueError(f"unsupported job executor: {self._job_executor_type}")
 
+        proc.user_arguments = self._user_args
         self._executors.append(proc)
         async with self._init_sem:
             if self._closed:

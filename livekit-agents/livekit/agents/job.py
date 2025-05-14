@@ -455,11 +455,13 @@ class JobRequest:
         job: agent.Job,
         on_reject: Callable[[], Coroutine[None, None, None]],
         on_accept: Callable[[JobAcceptArguments], Coroutine[None, None, None]],
+        user_arguments: Any | None = None
     ) -> None:
         self._job = job
         self._lock = asyncio.Lock()
         self._on_reject = on_reject
         self._on_accept = on_accept
+        self._user_args = user_arguments
 
     @property
     def id(self) -> str:
@@ -480,6 +482,10 @@ class JobRequest:
     @property
     def agent_name(self) -> str:
         return self._job.agent_name
+
+    @property
+    def user_arguments(self) -> Any | None:
+        return self._user_args
 
     async def reject(self) -> None:
         """Reject the job request. The job may be assigned to another worker"""
