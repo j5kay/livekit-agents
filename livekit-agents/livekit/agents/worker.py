@@ -224,6 +224,9 @@ class WorkerOptions:
     By default it uses "spawn" on all platforms, but "forkserver" on Linux.
     """
 
+    user_arguments: Any | _WorkerEnvOption[Any] = _WorkerEnvOption(dev_default=None, prod_default=None)
+    """Custom state to pass to spawned agent processes (must be pickle-able)"""
+
     def validate_config(self, devmode: bool):
         load_threshold = _WorkerEnvOption.getvalue(self.load_threshold, devmode)
         if load_threshold > 1 and not devmode:
@@ -317,6 +320,7 @@ class Worker(utils.EventEmitter[EventTypes]):
             memory_warn_mb=opts.job_memory_warn_mb,
             memory_limit_mb=opts.job_memory_limit_mb,
             http_proxy=opts.http_proxy or None,
+            user_arguments=_WorkerEnvOption.getvalue(opts.user_arguments, self._devmode)
         )
 
         self._previous_status = agent.WorkerStatus.WS_AVAILABLE
@@ -858,7 +862,12 @@ class Worker(utils.EventEmitter[EventTypes]):
 
             await self._proc_pool.launch_job(running_info)
 
-        job_req = JobRequest(job=msg.job, on_reject=_on_reject, on_accept=_on_accept)
+        job_req = JobRequest(
+            job=msg.job,
+            on_reject=_on_reject,
+            on_accept=_on_accept,
+            user_arguments=self._proc_pool.user_arguments
+        )
 
         logger.info(
             "received job request",
