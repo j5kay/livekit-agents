@@ -11,6 +11,7 @@ from . import proto, _run
 from .log import setup_logging
 
 CLI_ARGUMENTS: proto.CliArgs | None = None
+IGNORE_UNKNOWNS = dict(ignore_unknown_options=True, allow_extra_args=True)
 
 
 def run_app(
@@ -22,7 +23,10 @@ def run_app(
 
     cli = click.Group()
 
-    @cli.command(help="Start the worker in production mode.")
+    @cli.command(
+        help="Start the worker in production mode.",
+        context_settings=IGNORE_UNKNOWNS
+    )
     @click.option(
         "--log-level",
         default="INFO",
@@ -71,7 +75,10 @@ def run_app(
         CLI_ARGUMENTS = args
         _run.run_worker(args)
 
-    @cli.command(help="Start the worker in development mode")
+    @cli.command(
+        help="Start the worker in development mode",
+        context_settings=IGNORE_UNKNOWNS
+    )
     @click.option(
         "--log-level",
         default="DEBUG",
@@ -127,7 +134,10 @@ def run_app(
         CLI_ARGUMENTS = args
         _run.run_dev(args)
 
-    @cli.command(help="Start a new chat")
+    @cli.command(
+        help="Start a new chat",
+        context_settings=IGNORE_UNKNOWNS
+    )
     @click.option(
         "--url",
         envvar="LIVEKIT_URL",
@@ -168,7 +178,10 @@ def run_app(
         CLI_ARGUMENTS = args
         _run.run_worker(args)
 
-    @cli.command(help="Connect to a specific room")
+    @cli.command(
+        help="Connect to a specific room",
+        context_settings=IGNORE_UNKNOWNS
+    )
     @click.option(
         "--log-level",
         default="DEBUG",
